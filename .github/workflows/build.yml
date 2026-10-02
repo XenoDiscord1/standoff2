@@ -1,9 +1,9 @@
-name: build
+name: Build opengl32.dll
 
 on:
   push:
-    branches: [ main, master ]
-  workflow_dispatch:
+    branches: [main, master]
+  pull_request:
 
 jobs:
   build:
@@ -12,40 +12,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
-      - name: Fetch ImGui (fallback if submodule missing)
-        shell: pwsh
-        run: |
-          if (-not (Test-Path vendor/imgui/imgui.cpp)) {
-            Write-Host "vendor/imgui is empty — cloning ImGui v1.91.5 directly"
-            Remove-Item vendor/imgui -Recurse -Force -ErrorAction SilentlyContinue
-            git clone --depth 1 --branch v1.91.5 https://github.com/ocornut/imgui.git vendor/imgui
-          } else {
-            Write-Host "vendor/imgui already populated (submodule or vendored)"
-          }
-          Get-ChildItem vendor/imgui | Select-Object Name
+      - name: Configure CMake
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - name: Build
+        run: cmake --build build --config Release --parallel
 
-      - name: Build x64/Release
-        shell: cmd
-        run: |
-          msbuild Standoff2Cheat.sln /p:Configuration=Release /p:Platform=x64 /m /verbosity:minimal
-
-      - name: Collect artifacts
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path artifact | Out-Null
-          Copy-Item x64\Release\opengl32.dll artifact\opengl32.dll
-          if (Test-Path x64\Release\opengl32.pdb) { Copy-Item x64\Release\opengl32.pdb artifact\opengl32.pdb }
-          Copy-Item README.md artifact\README.md
-
-      - name: Upload artifact (Standoff2Cheat.zip)
+      - name: Upload DLL artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Standoff2Cheat
-          path: artifact/**
+          name: opengl32-dll
+          path: build/Release/opengl32.dll
           if-no-files-found: error
