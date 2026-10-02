@@ -790,8 +790,7 @@ EXT_CALL(void, glDisableVertexAttribArray, GLuint i)
 EXT_CALL(void, glVertexAttribPointer, GLuint i,GLint sz,GLenum t,GLboolean n,GLsizei s,const void* p)
     { if(real_glVertexAttribPointer) ((void(APIENTRY*)(GLuint,GLint,GLenum,GLboolean,GLsizei,const void*))real_glVertexAttribPointer)(i,sz,t,n,s,p); }
 
-EXT_CALL(void, glVertexAttrib1f, GLuint i,GLfloat x)
-    { if(real_glVertexAttribPointer) ((void(APIENTRY*)(GLuint,GLfloat))real_glEnableVertexAttribArray)(i); } // harmless
+EXT_CALL(void, glVertexAttrib1f, GLuint i,GLfloat x) {}
 
 EXT_CALL(void, glVertexAttrib2f, GLuint i,GLfloat x,GLfloat y)  {}
 EXT_CALL(void, glVertexAttrib3f, GLuint i,GLfloat x,GLfloat y,GLfloat z) {}

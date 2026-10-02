@@ -10,7 +10,7 @@
 
 #include "config.h"
 #include "gl_proxy.h"
-#include "math.h"
+#include "mathutils.h"
 #include "gui.h"
 
 // ════════════════════════════════════════════════════════════════════════════
