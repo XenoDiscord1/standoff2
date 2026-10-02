@@ -454,6 +454,8 @@ BOOL  WINAPI wglUseFontOutlinesW(HDC hdc, DWORD first, DWORD count, DWORD listBa
 
 // ── Core GL forwards ─────────────────────────────────────────────────────
 #define FWD0(r,n)              r APIENTRY n() { if (real_##n) real_##n(); }
+// FWD0R: zero-arg forward for non-void return types
+#define FWD0R(r,n)             r APIENTRY n() { if (real_##n) return real_##n(); return (r)0; }
 #define FWD1(r,n,T1,a1)        r APIENTRY n(T1 a1) { if (real_##n) real_##n(a1); }
 #define FWD2(r,n,T1,a1,T2,a2)  r APIENTRY n(T1 a1, T2 a2) { if (real_##n) real_##n(a1,a2); }
 
@@ -461,7 +463,7 @@ FWD0(void,   glEnd)
 FWD0(void,   glLoadIdentity)
 FWD0(void,   glFinish)
 FWD0(void,   glFlush)
-FWD0(GLenum, glGetError)
+FWD0R(GLenum, glGetError)
 
 FWD1(void, glBegin,              GLenum, m)
 FWD1(void, glEnable,             GLenum, c)
