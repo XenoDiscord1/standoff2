@@ -1,12 +1,14 @@
 // language: C++17, file: gl_proxy.cpp
 // Loads the real opengl32.dll from System32 and forwards every exported call.
 // Hooks for chams/ESP/GUI live in hooks.cpp and replace select functions.
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <windows.h>
 #include <GL/gl.h>
 #include <cstring>
 #include "gl_proxy.h"
+
+#pragma warning(push)
+#pragma warning(disable: 4273) // inconsistent dll linkage — intentional re-export
+#pragma warning(disable: 4005) // macro redefinition
 
 // ── Helper macro: resolve a single symbol from the real DLL ──────────────
 #define RESOLVE(name) \
@@ -358,43 +360,108 @@ BOOL  WINAPI wglSetPixelFormat(HDC h,int i,const PIXELFORMATDESCRIPTOR*p) { retu
 int   WINAPI wglGetPixelFormat(HDC h)          { return real_wglGetPixelFormat(h); }
 BOOL  WINAPI wglShareLists(HGLRC a,HGLRC b)   { return real_wglShareLists(a,b); }
 
-BOOL  WINAPI wglCopyContext(HGLRC s,HGLRC d,UINT m)       { return (BOOL)real_wglGetProcAddress ? FALSE : FALSE; /* rarely called */ }
-HGLRC WINAPI wglCreateLayerContext(HDC h,int l)            { return nullptr; }
-BOOL  WINAPI wglDescribeLayerPlane(HDC,int,int,UINT,void*) { return FALSE; }
-int   WINAPI wglGetLayerPaletteEntries(HDC,int,int,int,void*) { return 0; }
-BOOL  WINAPI wglRealizeLayerPalette(HDC,int,BOOL)          { return FALSE; }
-int   WINAPI wglSetLayerPaletteEntries(HDC,int,int,int,const void*) { return 0; }
-BOOL  WINAPI wglSwapLayerBuffers(HDC h,UINT f)             { return SwapBuffers(h); }
-BOOL  WINAPI wglUseFontBitmapsA(HDC h,DWORD f,DWORD c,DWORD l) { return FALSE; }
-BOOL  WINAPI wglUseFontBitmapsW(HDC h,DWORD f,DWORD c,DWORD l) { return FALSE; }
-BOOL  WINAPI wglUseFontOutlinesA(HDC,DWORD,DWORD,DWORD,FLOAT,FLOAT,int,void*) { return FALSE; }
-BOOL  WINAPI wglUseFontOutlinesW(HDC,DWORD,DWORD,DWORD,FLOAT,FLOAT,int,void*) { return FALSE; }
+// ── Rarely-used WGL (exact signatures from wingdi.h) ─────────────────────
+BOOL  WINAPI wglCopyContext(HGLRC s, HGLRC d, UINT m)
+{
+    (void)s; (void)d; (void)m;
+    return FALSE;
+}
 
-// ── Core GL stubs (no hooks needed, just forward) ────────────────────────
-#define FWD0(r,n)            r APIENTRY n()                               { return real_##n(); }
-#define FWD1(r,n,T1,a1)      r APIENTRY n(T1 a1)                         { return real_##n(a1); }
-#define FWD2(r,n,T1,a1,T2,a2) r APIENTRY n(T1 a1,T2 a2)                 { return real_##n(a1,a2); }
+HGLRC WINAPI wglCreateLayerContext(HDC h, int l)
+{
+    (void)h; (void)l;
+    return nullptr;
+}
 
-FWD0(void, glEnd)
-FWD0(void, glLoadIdentity)
-FWD0(void, glFinish)
-FWD0(void, glFlush)
+BOOL  WINAPI wglDescribeLayerPlane(HDC hdc, int iLayerPlane, int iPixelFormat,
+                                   UINT nBytes, LPLAYERPLANEDESCRIPTOR plpd)
+{
+    (void)hdc; (void)iLayerPlane; (void)iPixelFormat; (void)nBytes; (void)plpd;
+    return FALSE;
+}
+
+int   WINAPI wglGetLayerPaletteEntries(HDC hdc, int iLayerPlane, int iStart,
+                                       int cEntries, COLORREF* pcr)
+{
+    (void)hdc; (void)iLayerPlane; (void)iStart; (void)cEntries; (void)pcr;
+    return 0;
+}
+
+BOOL  WINAPI wglRealizeLayerPalette(HDC hdc, int iLayerPlane, BOOL bRealize)
+{
+    (void)hdc; (void)iLayerPlane; (void)bRealize;
+    return FALSE;
+}
+
+int   WINAPI wglSetLayerPaletteEntries(HDC hdc, int iLayerPlane, int iStart,
+                                       int cEntries, CONST COLORREF* pcr)
+{
+    (void)hdc; (void)iLayerPlane; (void)iStart; (void)cEntries; (void)pcr;
+    return 0;
+}
+
+BOOL  WINAPI wglSwapLayerBuffers(HDC hdc, UINT fuPlanes)
+{
+    (void)fuPlanes;
+    return SwapBuffers(hdc);
+}
+
+BOOL  WINAPI wglUseFontBitmapsA(HDC hdc, DWORD first, DWORD count, DWORD listBase)
+{
+    (void)hdc; (void)first; (void)count; (void)listBase;
+    return FALSE;
+}
+
+BOOL  WINAPI wglUseFontBitmapsW(HDC hdc, DWORD first, DWORD count, DWORD listBase)
+{
+    (void)hdc; (void)first; (void)count; (void)listBase;
+    return FALSE;
+}
+
+BOOL  WINAPI wglUseFontOutlinesA(HDC hdc, DWORD first, DWORD count, DWORD listBase,
+                                 FLOAT deviation, FLOAT extrusion, int format,
+                                 LPGLYPHMETRICSFLOAT lpgmf)
+{
+    (void)hdc; (void)first; (void)count; (void)listBase;
+    (void)deviation; (void)extrusion; (void)format; (void)lpgmf;
+    return FALSE;
+}
+
+BOOL  WINAPI wglUseFontOutlinesW(HDC hdc, DWORD first, DWORD count, DWORD listBase,
+                                 FLOAT deviation, FLOAT extrusion, int format,
+                                 LPGLYPHMETRICSFLOAT lpgmf)
+{
+    (void)hdc; (void)first; (void)count; (void)listBase;
+    (void)deviation; (void)extrusion; (void)format; (void)lpgmf;
+    return FALSE;
+}
+
+// ── Core GL forwards ─────────────────────────────────────────────────────
+#define FWD0(r,n)              r APIENTRY n() { if (real_##n) real_##n(); }
+#define FWD1(r,n,T1,a1)        r APIENTRY n(T1 a1) { if (real_##n) real_##n(a1); }
+#define FWD2(r,n,T1,a1,T2,a2)  r APIENTRY n(T1 a1, T2 a2) { if (real_##n) real_##n(a1,a2); }
+
+FWD0(void,   glEnd)
+FWD0(void,   glLoadIdentity)
+FWD0(void,   glFinish)
+FWD0(void,   glFlush)
 FWD0(GLenum, glGetError)
-FWD1(void, glBegin,   GLenum, m)
-FWD1(void, glEnable,  GLenum, c)
-FWD1(void, glDisable, GLenum, c)
-FWD1(void, glClear,   GLbitfield, b)
-FWD1(void, glBlendEquation, GLenum, m)
-FWD1(void, glDepthMask,  GLboolean, f)
-FWD1(void, glDepthRange, GLclampd, n, GLclampd, f)
-FWD1(void, glDepthFunc,  GLenum, fn)
-FWD1(void, glStencilMask, GLuint, m)
-FWD1(void, glLineWidth,   GLfloat, w)
-FWD1(void, glPointSize,   GLfloat, s)
-FWD1(void, glShadeModel,  GLenum, m)
-FWD1(void, glPushMatrix)
-FWD1(void, glPopMatrix)
-FWD1(void, glMatrixMode,  GLenum, m)
+
+FWD1(void, glBegin,              GLenum, m)
+FWD1(void, glEnable,             GLenum, c)
+FWD1(void, glDisable,            GLenum, c)
+FWD1(void, glClear,              GLbitfield, b)
+FWD1(void, glBlendEquation,      GLenum, m)
+FWD1(void, glDepthMask,          GLboolean, f)
+FWD2(void, glDepthRange,         GLclampd, n, GLclampd, f)
+FWD1(void, glDepthFunc,          GLenum, fn)
+FWD1(void, glStencilMask,        GLuint, m)
+FWD1(void, glLineWidth,          GLfloat, w)
+FWD1(void, glPointSize,          GLfloat, s)
+FWD1(void, glShadeModel,         GLenum, m)
+FWD0(void, glPushMatrix)
+FWD0(void, glPopMatrix)
+FWD1(void, glMatrixMode,         GLenum, m)
 FWD1(void, glEnableClientState,  GLenum, a)
 FWD1(void, glDisableClientState, GLenum, a)
 
@@ -871,3 +938,5 @@ void   APIENTRY glGetTexParameterfv(GLenum t,GLenum p,GLfloat* v) {}
 void   APIENTRY glGetTexParameteriv(GLenum t,GLenum p,GLint* v)   {}
 
 } // extern "C"
+
+#pragma warning(pop)
