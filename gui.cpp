@@ -3,8 +3,6 @@
 // INSERT   → toggle GUI window
 // DELETE   → toggle chams
 // HOME     → toggle ESP
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <windows.h>
 #include <GL/gl.h>
 #include <cstring>

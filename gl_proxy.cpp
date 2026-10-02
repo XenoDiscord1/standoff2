@@ -5,6 +5,18 @@
 #include <GL/gl.h>
 #include <cstring>
 #include "gl_proxy.h"
+#include <cstddef>
+
+// Missing types from legacy Windows GL/gl.h (needed for GLES-style stubs)
+#ifndef GLchar
+typedef char GLchar;
+#endif
+#ifndef GLsizeiptr
+typedef ptrdiff_t GLsizeiptr;
+#endif
+#ifndef GLintptr
+typedef ptrdiff_t GLintptr;
+#endif
 
 #pragma warning(push)
 #pragma warning(disable: 4273) // inconsistent dll linkage — intentional re-export
@@ -131,6 +143,9 @@ void* real_glBindAttribLocation      = nullptr;
 void* real_glGetProgramInfoLog       = nullptr;
 void* real_glGetShaderInfoLog        = nullptr;
 void* real_glUniform1i               = nullptr;
+void* real_glUniform2i               = nullptr;
+void* real_glUniform3i               = nullptr;
+void* real_glUniform4i               = nullptr;
 void* real_glUniform1f               = nullptr;
 void* real_glUniform1fv              = nullptr;
 void* real_glUniform2f               = nullptr;
@@ -151,6 +166,7 @@ void* real_glStencilOpSeparate       = nullptr;
 void* real_glStencilMaskSeparate     = nullptr;
 void* real_glDepthRangef             = nullptr;
 void* real_glValidateProgram         = nullptr;
+void* real_glIsEnabled               = nullptr;
 
 } // extern "C"
 
@@ -680,7 +696,7 @@ C3V(GLshort,s) C3V(GLubyte,ub) C3V(GLuint,ui) C3V(GLushort,us)
 #define V3V(T,s) void APIENTRY glVertex3##s##v(const T* v)  { real_glVertex2f((float)v[0],(float)v[1]); }
 #define V4(T,s) void APIENTRY glVertex4##s(T x,T y,T z,T w) { real_glVertex2f((float)x,(float)y); }
 #define V4V(T,s) void APIENTRY glVertex4##s##v(const T* v)  { real_glVertex2f((float)v[0],(float)v[1]); }
-V2(GLdouble,d) V2(GLfloat,f) V2(GLint,i) V2(GLshort,s)
+V2(GLdouble,d) /* V2(GLfloat,f) already defined above as glVertex2f */ V2(GLint,i) V2(GLshort,s)
 V2V(GLdouble,d) V2V(GLfloat,f) V2V(GLint,i) V2V(GLshort,s)
 V3(GLdouble,d) V3(GLfloat,f) V3(GLint,i) V3(GLshort,s)
 V3V(GLdouble,d) V3V(GLfloat,f) V3V(GLint,i) V3V(GLshort,s)

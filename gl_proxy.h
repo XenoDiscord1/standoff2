@@ -1,8 +1,16 @@
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <windows.h>
 #include <GL/gl.h>
+#include <cstddef>
+#ifndef GLchar
+typedef char GLchar;
+#endif
+#ifndef GLsizeiptr
+typedef ptrdiff_t GLsizeiptr;
+#endif
+#ifndef GLintptr
+typedef ptrdiff_t GLintptr;
+#endif
 
 // ── Initialise proxy: loads real opengl32, resolves all pointers ──────────
 bool proxy_init();

@@ -1,8 +1,7 @@
 // language: C++17, file: hooks.cpp, target: Windows x64 DLL (opengl32 proxy)
 // Defines the five exported symbols that replace their real counterparts.
 // No MinHook needed — we ARE opengl32.dll; these are our own exports.
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
+#include <cmath>
 #include <windows.h>
 #include <GL/gl.h>
 #include <cstring>
