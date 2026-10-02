@@ -18,10 +18,9 @@ FetchContent_MakeAvailable(imgui)
 
 # ── Our opengl32 proxy DLL ─────────────────────────────────────────────────
 add_library(opengl32 SHARED
-    src/dllmain.cpp
-    src/gl_proxy.cpp
-    src/hooks.cpp
-    src/gui.cpp
+    gl_proxy.cpp
+    hooks.cpp
+    gui.cpp
 
     # ImGui core
     ${imgui_SOURCE_DIR}/imgui.cpp
@@ -37,7 +36,7 @@ add_library(opengl32 SHARED
 )
 
 target_include_directories(opengl32 PRIVATE
-    src
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${imgui_SOURCE_DIR}
     ${imgui_SOURCE_DIR}/backends
 )
@@ -48,14 +47,13 @@ target_compile_definitions(opengl32 PRIVATE
     WIN32_LEAN_AND_MEAN
     NOMINMAX
     _CRT_SECURE_NO_WARNINGS
-    IMGUI_IMPL_OPENGL_LOADER_CUSTOM   # prevents imgui from pulling in opengl32.lib
+    IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 )
 
 # Do NOT link opengl32.lib — we are opengl32.dll.
-# gl* symbols used by ImGui resolve to our own stubs within this same DLL.
 target_link_options(opengl32 PRIVATE
     /NODEFAULTLIB:opengl32.lib
-    /NODEFAULTLIB:opengl32    # handles both variants
+    /NODEFAULTLIB:opengl32
 )
 
 target_link_libraries(opengl32 PRIVATE
